@@ -811,8 +811,8 @@ export const dbService = {
       });
     } else {
       // Offline/Local emulator only
-      const activeUid = localStorage.getItem("idbi_active_uid") || "demo-rahul"; // Auto-login to rahul by default
-      if (activeUid === "none") {
+      const activeUid = localStorage.getItem("idbi_active_uid");
+      if (!activeUid || activeUid === "none") {
         callback(null);
         return;
       }
@@ -822,10 +822,13 @@ export const dbService = {
       if (profile) {
         callback({ uid: activeUid, email: profile.email, displayName: profile.name, isDemo: true, profile });
       } else {
-        // Fallback to first preloaded user
-        const first = DEMO_USERS[0];
-        localStorage.setItem("idbi_active_uid", first.uid);
-        callback({ uid: first.uid, email: first.email, displayName: first.name, isDemo: true, profile: first });
+        // Look in DEMO_USERS directly
+        const demoUser = DEMO_USERS.find((u: any) => u.uid === activeUid);
+        if (demoUser) {
+          callback({ uid: activeUid, email: demoUser.email, displayName: demoUser.name, isDemo: true, profile: demoUser });
+        } else {
+          callback(null);
+        }
       }
     }
   },
